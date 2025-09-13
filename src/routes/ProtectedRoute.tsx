@@ -1,16 +1,29 @@
-
 import type { JSX } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: JSX.Element;
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const token = localStorage.getItem("token"); 
+  const location = useLocation();
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
+  let token: string | null = null;
+  try {
+    token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  } catch (err) {
+    console.warn("ProtectedRoute: could not read localStorage:", err);
+    token = null;
+  }
+
+  const isValidToken =
+    token !== null &&
+    token.trim() !== "" &&
+    token !== "null" &&
+    token !== "undefined";
+
+  if (!isValidToken) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;
